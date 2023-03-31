@@ -1,9 +1,9 @@
-from gpt_index import SimpleDirectoryReader, GPTListIndex, GPTSimpleVectorIndex, LLMPredictor, PromptHelper, ServiceContext
-from langchain import OpenAI
+from gpt_index import (SimpleDirectoryReader, GPTSimpleVectorIndex,
+                       LLMPredictor, PromptHelper, ServiceContext)
+from langchain.chat_models import ChatOpenAI
 from pathlib import Path
+
 import gradio as gr
-import sys
-import os
 
 
 def construct_index(directory_path):
@@ -17,7 +17,7 @@ def construct_index(directory_path):
                                  max_chunk_overlap,
                                  chunk_size_limit=chunk_size_limit)
 
-    llm_predictor = LLMPredictor(llm=OpenAI(
+    llm_predictor = LLMPredictor(llm=ChatOpenAI(
         temperature=0.7, model_name="gpt-3.5-turbo", max_tokens=num_outputs))
 
     service_context = ServiceContext.from_defaults(llm_predictor=llm_predictor,
