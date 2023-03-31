@@ -17,9 +17,8 @@ def construct_index(directory_path):
                                  max_chunk_overlap,
                                  chunk_size_limit=chunk_size_limit)
 
-    llm_predictor = LLMPredictor(llm=OpenAI(temperature=0.7,
-                                            model_name="text-davinci-003",
-                                            max_tokens=num_outputs))
+    llm_predictor = LLMPredictor(llm=OpenAI(
+        temperature=0.7, model_name="gpt-3.5-turbo", max_tokens=num_outputs))
 
     service_context = ServiceContext.from_defaults(llm_predictor=llm_predictor,
                                                    prompt_helper=prompt_helper)
