@@ -1,0 +1,5 @@
+openai
+langchain
+gpt_index
+PyPDF2
+gradio

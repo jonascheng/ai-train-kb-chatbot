@@ -7,6 +7,11 @@ DOCKERHUB_OWNER?=jonascheng
 DOCKER_IMG_NAME=${DOCKERHUB_OWNER}/${APPLICATION}
 PWD?=$(shell pwd)
 
+.PHONY: setup
+setup: ## setup project
+	python -m pip install -U pip
+	pip install -r requirements.txt
+
 .PHONY: docker-build
 docker-build: ## build docker image
 	${DOCKER} build -t ${DOCKER_IMG_NAME}:${COMMIT_SHA} .
