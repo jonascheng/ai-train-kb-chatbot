@@ -1,5 +1,5 @@
 openai
 langchain
-gpt_index
+llama-index
 PyPDF2
 gradio

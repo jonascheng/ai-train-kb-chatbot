@@ -1,7 +1,6 @@
-from gpt_index import (SimpleDirectoryReader, GPTSimpleVectorIndex,
-                       LLMPredictor, PromptHelper, ServiceContext,
-                       LangchainEmbedding)
-from langchain.chat_models import ChatOpenAI
+from llama_index import (SimpleDirectoryReader, GPTSimpleVectorIndex,
+                         LLMPredictor, PromptHelper, ServiceContext,
+                         LangchainEmbedding)
 from langchain.llms import AzureOpenAI
 from langchain.embeddings import OpenAIEmbeddings
 from pathlib import Path
@@ -10,39 +9,41 @@ import gradio as gr
 import openai
 import os
 
-max_input_size = 2046
-num_outputs = 512
-max_chunk_overlap = 20
-chunk_size_limit = 500
+max_input_size = 2000
+num_output = 500
+max_chunk_overlap = 0
+chunk_size_limit = 2000
+
+llm = AzureOpenAI(deployment_name="text-davinci-003",
+                  model_kwargs={
+                      "api_type": "azure",
+                      "api_version": "2022-12-01",
+                      "api_base": os.getenv('OPENAI_API_BASE'),
+                      "api_key": os.getenv("OPENAI_API_KEY"),
+                  })
+
+# https://learn.microsoft.com/en-us/azure/cognitive-services/openai/concepts/models#text-search-embedding
+embedding_llm = LangchainEmbedding(
+    OpenAIEmbeddings(
+        document_model_name="text-search-davinci-doc-001",
+        query_model_name="text-search-davinci-query-001",
+    ))
+
+prompt_helper = PromptHelper(max_input_size,
+                             num_output,
+                             max_chunk_overlap,
+                             chunk_size_limit=chunk_size_limit)
+
+llm_predictor = LLMPredictor(llm=llm)
+
+service_context = ServiceContext.from_defaults(
+    llm_predictor=llm_predictor,
+    embed_model=embedding_llm,
+    prompt_helper=prompt_helper,
+    chunk_size_limit=chunk_size_limit)
 
 
 def construct_index(directory_path):
-    llm = AzureOpenAI(deployment_name="text-davinci-003",
-                      model_kwargs={
-                          "api_type": "azure",
-                          "api_version": "2022-12-01",
-                          "api_base": os.getenv('OPENAI_API_BASE'),
-                          "api_key": os.getenv("OPENAI_API_KEY"),
-                      })
-
-    # https://learn.microsoft.com/en-us/azure/cognitive-services/openai/concepts/models#text-search-embedding
-    embedding_llm = LangchainEmbedding(
-        OpenAIEmbeddings(
-            document_model_name="text-search-davinci-doc-001",
-            query_model_name="text-search-davinci-query-001",
-        ))
-
-    prompt_helper = PromptHelper(max_input_size,
-                                 num_outputs,
-                                 max_chunk_overlap,
-                                 chunk_size_limit=chunk_size_limit)
-
-    llm_predictor = LLMPredictor(llm=llm)
-
-    service_context = ServiceContext.from_defaults(llm_predictor=llm_predictor,
-                                                   embed_model=embedding_llm,
-                                                   prompt_helper=prompt_helper)
-
     documents = SimpleDirectoryReader(directory_path).load_data()
 
     index = GPTSimpleVectorIndex.from_documents(
@@ -54,32 +55,6 @@ def construct_index(directory_path):
 
 
 def chatbot(input_text):
-    llm = AzureOpenAI(deployment_name="text-davinci-003",
-                      model_kwargs={
-                          "api_type": "azure",
-                          "api_version": "2022-12-01",
-                          "api_base": os.getenv('OPENAI_API_BASE'),
-                          "api_key": os.getenv("OPENAI_API_KEY"),
-                      })
-
-    # https://learn.microsoft.com/en-us/azure/cognitive-services/openai/concepts/models#text-search-embedding
-    embedding_llm = LangchainEmbedding(
-        OpenAIEmbeddings(
-            document_model_name="text-search-davinci-doc-001",
-            query_model_name="text-search-davinci-query-001",
-        ))
-
-    prompt_helper = PromptHelper(max_input_size,
-                                 num_outputs,
-                                 max_chunk_overlap,
-                                 chunk_size_limit=chunk_size_limit)
-
-    llm_predictor = LLMPredictor(llm=llm)
-
-    service_context = ServiceContext.from_defaults(llm_predictor=llm_predictor,
-                                                   embed_model=embedding_llm,
-                                                   prompt_helper=prompt_helper)
-
     index = GPTSimpleVectorIndex.load_from_disk(
         'index.json', service_context=service_context)
     response = index.query(input_text, response_mode="compact")
