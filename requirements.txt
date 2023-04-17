@@ -3,3 +3,7 @@ langchain
 llama-index
 PyPDF2
 gradio
+unstructured
+pdfminer
+pdfminer.six
+chromadb
